@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spotlight — 30 Seconds for $1</title>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('spotlight_theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-subtle: #f4f4f5;
+      --border: #e4e4e7;
+      --border-strong: #d4d4d8;
+      --text: #09090b;
+      --text-muted: #71717a;
+      --accent: #09090b;
+      --accent-hover: #27272a;
+      --accent-text: #ffffff;
+      --live: #10b981;
+      --like: #16a34a;
+      --like-bg: #f0fdf4;
+      --dislike: #dc2626;
+      --dislike-bg: #fef2f2;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+      --warn-border: #fde68a;
+      --poll-mine-fill: #e4e4e7;
+      --backdrop: rgba(9, 9, 11, 0.45);
+      --radius: 16px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    :root[data-theme="dark"] {
+      --bg: #09090b;
+      --surface: #121215;
+      --surface-subtle: #1c1c21;
+      --border: #27272a;
+      --border-strong: #3f3f46;
+      --text: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #fafafa;
+      --accent-hover: #e4e4e7;
+      --accent-text: #09090b;
+      --live: #10b981;
+      --like: #22c55e;
+      --like-bg: rgba(34, 197, 94, 0.12);
+      --dislike: #ef4444;
+      --dislike-bg: rgba(239, 68, 68, 0.12);
+      --warn: #f59e0b;
+      --warn-bg: rgba(245, 158, 11, 0.12);
+      --warn-border: rgba(245, 158, 11, 0.35);
+      --poll-mine-fill: #2e2e36;
+      --backdrop: rgba(0, 0, 0, 0.72);
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    /* Top Navigation */
+    header {
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 20px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.02em;
+    }
+
+    .pulse-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--live);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    .pulse-dot.amber {
+      background: var(--warn);
+      box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.5);
+      animation: pulse-amber 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes pulse-amber {
+      0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.5); }
+      70% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .status-pill strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .dot-sep {
+      color: var(--border-strong);
+    }
+
+    .btn-pill-subtle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-pill-subtle:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .icon-header-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .icon-header-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .icon-header-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .notif-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--dislike);
+      display: none;
+    }
+
+    .notif-badge.show {
+      display: block;
+    }
+
+    .notif-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: min(320px, calc(100vw - 24px));
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px);
+      transition: all 0.18s ease;
+      z-index: 60;
+      overflow: hidden;
+    }
+
+    .notif-panel.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .notif-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .notif-head span:last-child {
+      font-weight: 500;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .notif-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .notif-empty {
+      padding: 20px 14px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .notif-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: background 0.15s ease;
+    }
+
+    .notif-item:last-child {
+      border-bottom: none;
+    }
+
+    .notif-item.clickable {
+      cursor: pointer;
+    }
+
+    .notif-item.clickable:hover {
+      background: var(--surface-subtle);
+    }
+
+    .notif-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .notif-status {
+      font-size: 0.74rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .status-pending { color: var(--warn); }
+    .status-approved { color: var(--like); }
+    .status-rejected { color: var(--dislike); }
+    .notif-meta { color: var(--text-muted); font-weight: 500; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      padding: 9px 16px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Main Stage */
+    main {
+      flex: 1;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .spotlight-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--surface-subtle);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--text);
+      transform-origin: left;
+      will-change: width;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px 0;
+      gap: 12px;
+    }
+
+    .badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--live);
+    }
+
+    .header-meta-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .creator-pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .timer-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--surface-subtle);
+      padding: 4px 10px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 28px 24px;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    /* Empty / Idle State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .empty-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--surface-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+    }
+
+    .empty-state h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 380px;
+      line-height: 1.5;
+    }
+
+    /* Post Types */
+    .post-text-main {
+      font-size: clamp(1.25rem, 2.6vw, 1.65rem);
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+      text-align: center;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .post-image-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .post-image-wrap img {
+      max-width: 100%;
+      max-height: 48vh;
+      border-radius: 12px;
+      object-fit: contain;
+      background: var(--surface-subtle);
+    }
+
+    .post-image-wrap.poll-media img {
+      max-height: 30vh;
+    }
+
+    .post-caption {
+      font-size: 0.98rem;
+      color: var(--text);
+      text-align: center;
+      font-weight: 500;
+      word-break: break-word;
+    }
+
+    /* Poll UI */
+    .poll-question {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      word-break: break-word;
+    }
+
+    .poll-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .poll-option-btn {
+      position: relative;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+
+    .poll-option-btn:hover:not(:disabled) {
+      border-color: var(--text);
+    }
+
+    .poll-option-btn.voted-mine {
+      border-color: var(--text);
+      font-weight: 600;
+    }
+
+    .poll-option-btn:disabled {
+      cursor: default;
+    }
+
+    .poll-bar-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: var(--surface-subtle);
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 0;
+    }
+
+    .poll-option-btn.voted-mine .poll-bar-fill {
+      background: var(--poll-mine-fill);
+    }
+
+    .poll-option-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .poll-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Optional Link */
+    .post-link-box {
+      display: flex;
+      justify-content: center;
+    }
+
+    .post-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      max-width: 100%;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .post-link:hover {
+      background: var(--surface);
+      border-color: var(--text);
+    }
+
+    .post-link span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Footer Reactions */
+    .card-footer {
+      border-top: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .reactions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .react-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .react-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .react-btn.active-like {
+      background: var(--like-bg);
+      border-color: var(--like);
+      color: var(--like);
+    }
+
+    .react-btn.active-dislike {
+      background: var(--dislike-bg);
+      border-color: var(--dislike);
+      color: var(--dislike);
+    }
+
+    .ephemeral-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 16px 20px 24px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 460px;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      color: var(--text);
+    }
+
+    /* Form Flex Order for clean Poll + Image placement */
+    #postForm {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Segmented Tabs */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--surface-subtle);
+      padding: 4px;
+      border-radius: 10px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 8px;
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .char-count {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    textarea,
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.92rem;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    textarea:focus,
+    input:focus {
+      border-color: var(--text);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+    }
+
+    /* Image Upload Box */
+    .dropzone {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--text);
+      background: var(--surface-subtle);
+    }
+
+    .preview-box {
+      position: relative;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .preview-box.show {
+      display: flex;
+    }
+
+    .preview-box img {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .preview-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .preview-meta strong {
+      display: block;
+      font-size: 0.82rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .preview-meta span {
+      font-size: 0.75rem;
+      color: var(--like);
+      font-weight: 600;
+    }
+
+    .remove-img-btn {
+      background: var(--surface);
+      color: var(--dislike);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .upload-progress-wrap {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .upload-progress-wrap.show {
+      display: flex;
+    }
+
+    .upload-progress-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .upload-progress-track {
+      width: 100%;
+      height: 5px;
+      border-radius: 999px;
+      background: var(--surface-subtle);
+      overflow: hidden;
+    }
+
+    .upload-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--text);
+      transition: width 0.15s ease;
+    }
+
+    .upload-progress-fill.done {
+      background: var(--like);
+    }
+
+    /* Poll Options Editor */
+    .poll-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-subtle);
+    }
+
+    .form-error {
+      color: var(--dislike);
+      font-size: 0.82rem;
+      font-weight: 500;
+      display: none;
+    }
+
+    .modal-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .submit-full {
+      width: 100%;
+      justify-content: center;
+      padding: 12px;
+      font-size: 0.95rem;
+    }
+
+    .queue-hint {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Payment View */
+    .pay-view {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+
+    .pay-view.show {
+      display: flex;
+    }
+
+    .qr-box {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      width: 164px;
+      height: 164px;
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .pay-amount-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .pay-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--like);
+    }
+
+    .pay-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: -6px;
+    }
+
+    .address-box {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 8px;
+    }
+
+    .addr-text {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    .icon-copy-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .icon-copy-btn:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    .icon-copy-btn.copied {
+      border-color: var(--like);
+      color: var(--like);
+      background: var(--like-bg);
+    }
+
+    .icon-copy-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .pay-actions {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .pay-actions .btn-primary {
+      flex: 1;
+    }
+
+    .pay-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .pay-disclaimer {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Rules List */
+    .rules-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rule-item {
+      border: 1px solid var(--border);
+      background: var(--surface-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .rule-item h4 {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .rule-item p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--accent);
+      color: var(--accent-text);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 100;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 640px) {
+      .notif-wrap {
+        position: static;
+      }
+      .notif-panel {
+        left: 20px;
+        right: 20px;
+        width: auto;
+        top: calc(100% + 4px);
+      }
+    }
+
+    @media (max-width: 540px) {
+      header {
+        flex-wrap: wrap;
+      }
+      .card-footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="pulse-dot"></span>
+      <span>Spotlight</span>
+    </div>
+
+    <div class="header-right">
+      <div class="status-pill">
+        <span><strong id="viewerCount">1</strong> watching</span>
+        <span class="dot-sep">·</span>
+        <span><strong id="queueCount">0</strong> queued</span>
+      </div>
+
+      <button class="btn-pill-subtle" id="rulesBtn" type="button">Rules</button>
+
+      <button class="icon-header-btn" id="themeToggleBtn" type="button" aria-label="Toggle dark mode" title="Toggle theme"></button>
+
+      <div class="notif-wrap" id="notifWrap">
+        <button class="icon-header-btn" id="notifBtn" type="button" aria-label="Your submissions" title="Your submissions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-badge" id="notifBadge"></span>
+        </button>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-head">
+            <span>Your Submissions</span>
+            <span>Auto-updates</span>
+          </div>
+          <div class="notif-list" id="notifList">
+            <div class="notif-empty">No recent submissions yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="openModalBtn" type="button">+ Claim 30s ($1)</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="spotlight-card" id="spotlightCard">
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <!-- Active Header (hidden when idle) -->
+      <div class="card-header" id="activeHeader" style="display: none;">
+        <span class="badge-live">● On Air</span>
+        <div class="header-meta-right">
+          <span class="creator-pill" id="creatorLabel"></span>
+          <span class="timer-mono" id="timerDisplay">00:30</span>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="card-body" id="cardBody">
+        <div class="empty-state">
+          <div class="empty-icon">✦</div>
+          <h1>The spotlight is open</h1>
+          <p>Pay $1 in SOL to broadcast text, an image, or a live poll to everyone here for 30 seconds. Nothing is saved.</p>
+          <button class="btn-primary" id="idleCtaBtn" type="button">Take the Spotlight ($1)</button>
+        </div>
+      </div>
+
+      <!-- Reactions Footer (hidden when idle) -->
+      <div class="card-footer" id="activeFooter" style="display: none;">
+        <div class="reactions">
+          <button class="react-btn" id="likeBtn" type="button">
+            <span>👍</span>
+            <span id="likeCount">0</span>
+          </button>
+          <button class="react-btn" id="dislikeBtn" type="button">
+            <span>👎</span>
+            <span id="dislikeCount">0</span>
+          </button>
+        </div>
+        <span class="ephemeral-note">Vanishes forever in 30s</span>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    No accounts · No history · Everything disappears after 30 seconds
+  </footer>
+
+  <!-- Create / Pay / Poll Results Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalTitle">Claim 30 Seconds ($1)</h2>
+          <p class="modal-sub" id="modalSub">Shown live to everyone on the site. $1 in SOL.</p>
+        </div>
+        <button class="close-btn" id="closeModalBtn" type="button" aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Poll Results View -->
+      <div id="pollResultView" style="display: none;"></div>
+
+      <!-- Submission Form -->
+      <form id="postForm" novalidate>
+        <div class="field-group" style="order: 1;">
+          <label class="field-label" for="usernameInput">
+            <span>Your name</span>
+          </label>
+          <input type="text" id="usernameInput" maxlength="20" placeholder="How should we credit you?" autocomplete="nickname" />
+        </div>
+
+        <div class="tabs" style="order: 2;">
+          <button class="tab-btn active" data-tab="text" type="button">Text</button>
+          <button class="tab-btn" data-tab="image" type="button">Image</button>
+          <button class="tab-btn" data-tab="poll" type="button">Poll</button>
+        </div>
+
+        <!-- TEXT TAB -->
+        <div class="tab-panel" id="panel-text" style="order: 3;">
+          <div class="field-group">
+            <label class="field-label" for="textInput">
+              <span>Your message</span>
+              <span class="char-count" id="textCounter">0 / 180</span>
+            </label>
+            <textarea id="textInput" maxlength="180" placeholder="Say something to everyone watching right now..."></textarea>
+          </div>
+        </div>
+
+        <!-- IMAGE CAPTION (shown in Image tab) -->
+        <div class="tab-panel" id="panel-image" style="display: none; order: 4;">
+          <div class="field-group">
+            <label class="field-label" for="captionInput">
+              <span>Caption (optional)</span>
+              <span class="char-count" id="captionCounter">0 / 180</span>
+            </label>
+            <input type="text" id="captionInput" maxlength="180" placeholder="Add a short caption..." />
+          </div>
+        </div>
+
+        <!-- POLL TAB -->
+        <div class="tab-panel" id="panel-poll" style="display: none; order: 3;">
+          <div class="field-group">
+            <label class="field-label" for="pollQuestionInput">
+              <span>Poll question</span>
+              <span class="char-count" id="pollQuestionCounter">0 / 120</span>
+            </label>
+            <input type="text" id="pollQuestionInput" maxlength="120" placeholder="Ask everyone a question..." />
+          </div>
+
+          <div class="field-group" style="margin-top: 12px;">
+            <span class="field-label">Options (2–4)</span>
+            <div class="poll-inputs" id="pollInputs">
+              <input type="text" class="poll-opt-input" maxlength="35" placeholder="Option 1 (e.g. Yes)" />
+              <input type="text" class="poll-opt-input" maxlength="35" placeholder="Option 2 (e.g. No)" />
+            </div>
+            <button type="button" class="btn-ghost" id="addOptionBtn" style="margin-top: 6px;">+ Add option</button>
+          </div>
+        </div>
+
+        <!-- SHARED IMAGE UPLOADER (used by both Image tab & Poll tab) -->
+        <div class="field-group" id="imageUploadGroup" style="display: none; order: 4;">
+          <span class="field-label" id="imageUploadLabel">Upload image (JPG, PNG, GIF, WebP · max 8MB)</span>
+          <input type="file" id="imageFileInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+          <div class="dropzone" id="dropzone">
+            Click to choose an image or drag &amp; drop here
+          </div>
+          <div class="preview-box" id="imagePreviewBox">
+            <img id="imagePreview" alt="Preview" />
+            <div class="preview-meta">
+              <strong id="imagePreviewName">image.png</strong>
+              <span id="imagePreviewStatus">Ready</span>
+            </div>
+            <button type="button" class="remove-img-btn" id="removeImgBtn">Remove</button>
+          </div>
+          <div class="upload-progress-wrap" id="uploadProgressWrap">
+            <div class="upload-progress-info">
+              <span id="uploadStatusText">Uploading image...</span>
+              <span id="uploadPct">0%</span>
+            </div>
+            <div class="upload-progress-track">
+              <div class="upload-progress-fill" id="uploadProgressBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPTIONAL LINK (ALL TABS) -->
+        <div class="field-group" style="order: 5;">
+          <label class="field-label" for="linkInput">
+            <span>Link (optional)</span>
+          </label>
+          <input type="url" id="linkInput" placeholder="https://yourwebsite.com" />
+        </div>
+
+        <p class="form-error" id="formError" style="order: 6;"></p>
+
+        <div class="modal-footer" style="order: 7; margin-top: 4px;">
+          <button type="submit" class="btn-primary submit-full" id="submitPostBtn">
+            Continue to Payment · $1
+          </button>
+          <p class="queue-hint" id="queueHint">Goes live after payment &amp; quick moderation.</p>
+        </div>
+      </form>
+
+      <!-- Solana Payment View -->
+      <div class="pay-view" id="payView">
+        <div class="qr-box">
+          <img id="qrImage" src="" alt="Solana Payment QR Code" />
+        </div>
+
+        <div class="pay-amount-row">
+          <span class="pay-amount" id="payAmount">0.0000</span>
+          <span style="font-weight: 700; color: var(--like);">SOL</span>
+          <button class="icon-copy-btn" id="copyPriceBtn" type="button" aria-label="Copy SOL amount" title="Copy SOL amount"></button>
+        </div>
+        <p class="pay-sub">Equivalent to $1.00 USD (SOL rate: $<span id="liveRate">0.00</span>)</p>
+
+        <div class="address-box">
+          <div class="addr-text" id="payAddress">...</div>
+          <button class="icon-copy-btn" id="copyAddrBtn" type="button" aria-label="Copy wallet address" title="Copy wallet address"></button>
+        </div>
+
+        <div class="pay-actions">
+          <button type="button" class="btn-ghost" id="backToEditBtn" style="padding: 10px 14px;">← Edit</button>
+          <a id="openWalletBtn" href="#" class="btn-primary">Open Wallet App</a>
+        </div>
+
+        <div class="pay-status-pill">
+          <span class="pulse-dot amber"></span>
+          <span>Waiting for SOL transfer... (auto-detects)</span>
+        </div>
+
+        <p class="pay-disclaimer">
+          Keep this window open until detected. All payments are final; rejected rule-breaking submissions are not refunded.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div class="modal-backdrop" id="rulesModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rulesModalTitle">
+      <div class="modal-header">
+        <div>
+          <h2 id="rulesModalTitle">Rules of the Spotlight</h2>
+          <p class="modal-sub">Please read carefully before claiming your 30 seconds.</p>
+        </div>
+        <button class="close-btn" id="closeRulesModalBtn" type="button" aria-label="Close">&times;</button>
+      </div>
+
+      <div class="rules-list">
+        <div class="rule-item">
+          <h4>Open &amp; Free Expression</h4>
+          <p>Share thoughts, memes, images, polls, or your project links. Built for open reach without algorithms.</p>
+        </div>
+        <div class="rule-item">
+          <h4>No Extreme Content</h4>
+          <p>Gore, pornography, and illegal materials are strictly prohibited and rejected immediately by moderation.</p>
+        </div>
+        <div class="rule-item">
+          <h4>Zero Refunds Policy</h4>
+          <p>All SOL payments are final. Submissions rejected for breaking content rules will not be refunded.</p>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary submit-full" id="acceptRulesBtn">Got it</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // --- Theme Toggle (Light / Dark) ---
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const moonSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+    const sunSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`;
+
+    function isDarkTheme() {
+      return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    function updateThemeBtnUI() {
+      const dark = isDarkTheme();
+      themeToggleBtn.innerHTML = dark ? sunSVG : moonSVG;
+      themeToggleBtn.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+      themeToggleBtn.setAttribute('aria-label', themeToggleBtn.title);
+    }
+
+    updateThemeBtnUI();
+
+    themeToggleBtn.addEventListener('click', () => {
+      const nextDark = !isDarkTheme();
+      if (nextDark) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('spotlight_theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('spotlight_theme', 'light');
+      }
+      updateThemeBtnUI();
+    });
+
+    // --- Persistent Anonymous Device ID ---
+    let deviceId = localStorage.getItem('spotlight_client_id');
+    if (!deviceId) {
+      deviceId = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+      localStorage.setItem('spotlight_client_id', deviceId);
+    }
+
+    // Warm up per-device Solana wallet
+    fetch('/api/init-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId })
+    }).catch(() => {});
+
+    const socket = io({ auth: { clientId: deviceId } });
+
+    // App State
+    let currentState = null;
+    let currentPost = null;
+    let renderedPostId = null;
+    let lastPreloadedUrl = null;
+    let clockOffsetMs = 0;
+    let myReaction = null;
+    let myPollVote = null;
+    let queueLength = 0;
+    let selectedTab = 'text';
+    let preMediaUrl = '';
+    let preMediaPath = '';
+    let isUploadingMedia = false;
+    let paymentPollInterval = null;
+    let rafId = null;
+
+    let mySubmissions = [];
+    try {
+      mySubmissions = JSON.parse(localStorage.getItem('spotlight_subs') || '[]');
+    } catch {
+      mySubmissions = [];
+    }
+
+    // DOM Elements
+    const viewerCountEl = document.getElementById('viewerCount');
+    const queueCountEl = document.getElementById('queueCount');
+    const progressFill = document.getElementById('progressFill');
+    const activeHeader = document.getElementById('activeHeader');
+    const creatorLabel = document.getElementById('creatorLabel');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const cardBody = document.getElementById('cardBody');
+    const activeFooter = document.getElementById('activeFooter');
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    const likeCountEl = document.getElementById('likeCount');
+    const dislikeCountEl = document.getElementById('dislikeCount');
+
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSub = document.getElementById('modalSub');
+    const openModalBtn = document.getElementById('openModalBtn');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const postForm = document.getElementById('postForm');
+    const payView = document.getElementById('payView');
+    const pollResultView = document.getElementById('pollResultView');
+    const formError = document.getElementById('formError');
+    const submitPostBtn = document.getElementById('submitPostBtn');
+    const queueHint = document.getElementById('queueHint');
+
+    const usernameInput = document.getElementById('usernameInput');
+    const textInput = document.getElementById('textInput');
+    const textCounter = document.getElementById('textCounter');
+    const captionInput = document.getElementById('captionInput');
+    const captionCounter = document.getElementById('captionCounter');
+    const pollQuestionInput = document.getElementById('pollQuestionInput');
+    const pollQuestionCounter = document.getElementById('pollQuestionCounter');
+    const pollInputs = document.getElementById('pollInputs');
+    const addOptionBtn = document.getElementById('addOptionBtn');
+    const linkInput = document.getElementById('linkInput');
+
+    const imageUploadGroup = document.getElementById('imageUploadGroup');
+    const imageUploadLabel = document.getElementById('imageUploadLabel');
+    const imageFileInput = document.getElementById('imageFileInput');
+    const dropzone = document.getElementById('dropzone');
+    const imagePreviewBox = document.getElementById('imagePreviewBox');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewName = document.getElementById('imagePreviewName');
+    const imagePreviewStatus = document.getElementById('imagePreviewStatus');
+    const removeImgBtn = document.getElementById('removeImgBtn');
+    const uploadProgressWrap = document.getElementById('uploadProgressWrap');
+    const uploadStatusText = document.getElementById('uploadStatusText');
+    const uploadPct = document.getElementById('uploadPct');
+    const uploadProgressBar = document.getElementById('uploadProgressBar');
+
+    const notifWrap = document.getElementById('notifWrap');
+    const notifBtn = document.getElementById('notifBtn');
+    const notifBadge = document.getElementById('notifBadge');
+    const notifPanel = document.getElementById('notifPanel');
+    const notifList = document.getElementById('notifList');
+
+    const rulesModal = document.getElementById('rulesModal');
+    const rulesBtn = document.getElementById('rulesBtn');
+    const closeRulesModalBtn = document.getElementById('closeRulesModalBtn');
+    const acceptRulesBtn = document.getElementById('acceptRulesBtn');
+
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+    }
+
+    function updateQueueHint() {
+      if (!currentPost && queueLength === 0) {
+        queueHint.textContent = 'Stage is open — goes live after payment & moderation.';
+      } else {
+        const totalWait = (queueLength + (currentPost ? 1 : 0)) * 30;
+        queueHint.textContent = `Current queue wait: ~${totalWait}s before your 30s spotlight.`;
+      }
+    }
+
+    // --- Socket Events ---
+
+    function applyState(state) {
+      currentState = state;
+      if (state.serverTime) {
+        clockOffsetMs = state.serverTime - Date.now();
+      }
+      if (typeof state.viewersCount === 'number') {
+        viewerCountEl.textContent = Math.max(1, state.viewersCount);
+      }
+      queueLength = state.queueCount || 0;
+      queueCountEl.textContent = queueLength;
+      updateQueueHint();
+
+      if (state.nextMediaUrl && state.nextMediaUrl !== lastPreloadedUrl) {
+        lastPreloadedUrl = state.nextMediaUrl;
+        const preloadImg = new Image();
+        preloadImg.src = state.nextMediaUrl;
+      }
+
+      const incoming = state.active;
+
+      const isNewPost = (!incoming && renderedPostId !== null) || (incoming && incoming.id !== renderedPostId);
+
+      currentPost = incoming;
+      renderNotifs();
+
+      if (!currentPost) {
+        renderedPostId = null;
+        myReaction = null;
+        myPollVote = null;
+        renderIdle();
+        return;
+      }
+
+      if (isNewPost) {
+        renderedPostId = currentPost.id;
+        myReaction = currentPost.myReaction || null;
+        myPollVote = currentPost.myPollVote !== undefined && currentPost.myPollVote !== null
+          ? currentPost.myPollVote
+          : getSavedLocalVote(currentPost.id);
+        renderActivePost(currentPost);
+        startTimerLoop();
+      } else {
+        if (currentPost.myReaction !== undefined) myReaction = currentPost.myReaction;
+        if (currentPost.myPollVote !== undefined && currentPost.myPollVote !== null) {
+          myPollVote = currentPost.myPollVote;
+        }
+        updateMetricsUI(currentPost);
+      }
+    }
+
+    function getSavedLocalVote(itemId) {
+      try {
+        const votes = JSON.parse(localStorage.getItem('spotlight_votes') || '{}');
+        return typeof votes[itemId] === 'number' ? votes[itemId] : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveLocalVote(itemId, optionId) {
+      try {
+        const votes = JSON.parse(localStorage.getItem('spotlight_votes') || '{}');
+        votes[itemId] = optionId;
+        localStorage.setItem('spotlight_votes', JSON.stringify(votes));
+      } catch {}
+    }
+
+    socket.on('state', applyState);
+    socket.on('connect', () => socket.emit('request-state'));
+
+    socket.on('viewers-count', (count) => {
+      viewerCountEl.textContent = Math.max(1, count);
+    });
+
+    socket.on('spotlight:my-votes', ({ postId, myReaction: r, myPollVote: pv }) => {
+      if (!currentPost || currentPost.id !== postId) return;
+      myReaction = r;
+      if (pv !== undefined && pv !== null) myPollVote = pv;
+      updateReactionButtons();
+      if (currentPost.type === 'poll' && currentPost.pollData) {
+        updatePollBars(currentPost.pollData);
+      }
+    });
+
+    socket.on('reaction-update', ({ itemId, likes, dislikes }) => {
+      if (!currentPost || currentPost.id !== itemId) return;
+      currentPost.likes = likes;
+      currentPost.dislikes = dislikes;
+      updateMetricsUI(currentPost);
+    });
+
+    socket.on('poll-update', (data) => {
+      if (!currentPost || currentPost.id !== data.itemId || !currentPost.pollData) return;
+      currentPost.pollData.options = data.options;
+      currentPost.pollData.totalVotes = data.totalVotes;
+      updatePollBars(currentPost.pollData);
+    });
+
+    socket.on('submission-status', (data) => {
+      const sub = mySubmissions.find((s) => s.id === data.id);
+      if (sub && sub.status === 'pending') {
+        sub.status = data.status;
+        renderNotifs();
+        notifBadge.classList.add('show');
+        showToast(data.status === 'approved' ? 'Your spotlight was approved!' : 'Your spotlight was rejected.');
+      }
+    });
+
+    // --- Rendering (XSS-safe DOM nodes) ---
+
+    function renderIdle() {
+      cancelAnimationFrame(rafId);
+      progressFill.style.width = '0%';
+      activeHeader.style.display = 'none';
+      activeFooter.style.display = 'none';
+
+      cardBody.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.className = 'empty-state';
+
+      const icon = document.createElement('div');
+      icon.className = 'empty-icon';
+      icon.textContent = '✦';
+
+      const h1 = document.createElement('h1');
+      h1.textContent = 'The spotlight is open';
+
+      const p = document.createElement('p');
+      p.textContent = 'Pay $1 in SOL to broadcast text, an image, or a live poll to everyone here for 30 seconds. Nothing is saved.';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-primary';
+      btn.textContent = 'Take the Spotlight ($1)';
+      btn.addEventListener('click', openModal);
+
+      wrap.append(icon, h1, p, btn);
+      cardBody.appendChild(wrap);
+    }
+
+    function createOptimizedStageImage(src, alt) {
+      const container = document.createDocumentFragment();
+      const status = document.createElement('span');
+      status.style.fontSize = '0.8rem';
+      status.style.color = 'var(--text-muted)';
+      status.textContent = 'Loading image...';
+
+      const img = document.createElement('img');
+      img.alt = alt;
+      img.decoding = 'async';
+      img.style.opacity = '0';
+      img.style.transition = 'opacity 0.18s ease';
+
+      const reveal = () => {
+        status.remove();
+        img.style.opacity = '1';
+      };
+
+      img.addEventListener('load', reveal);
+      img.addEventListener('error', () => {
+        status.textContent = 'Image failed to load';
+      });
+      img.src = src;
+
+      if (img.complete && img.naturalWidth > 0) {
+        reveal();
+      } else {
+        container.appendChild(status);
+      }
+
+      container.appendChild(img);
+      return container;
+    }
+
+    function renderActivePost(post) {
+      activeHeader.style.display = 'flex';
+      activeFooter.style.display = 'flex';
+      creatorLabel.textContent = post.username ? `by @${post.username}` : '';
+      cardBody.innerHTML = '';
+
+      if (post.type === 'text') {
+        const div = document.createElement('div');
+        div.className = 'post-text-main';
+        div.textContent = post.text;
+        cardBody.appendChild(div);
+      } else if (post.type === 'media' && post.mediaUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'post-image-wrap';
+        wrap.appendChild(createOptimizedStageImage(post.mediaUrl, post.text || `Spotlight image by ${post.username || 'user'}`));
+
+        if (post.text) {
+          const cap = document.createElement('div');
+          cap.className = 'post-caption';
+          cap.textContent = post.text;
+          wrap.appendChild(cap);
+        }
+        cardBody.appendChild(wrap);
+      } else if (post.type === 'poll' && post.pollData) {
+        if (post.mediaUrl) {
+          const wrap = document.createElement('div');
+          wrap.className = 'post-image-wrap poll-media';
+          wrap.appendChild(createOptimizedStageImage(post.mediaUrl, post.text || `Poll image by ${post.username || 'user'}`));
+          cardBody.appendChild(wrap);
+        }
+
+        const q = document.createElement('div');
+        q.className = 'poll-question';
+        q.textContent = post.text;
+        cardBody.appendChild(q);
+
+        const list = document.createElement('div');
+        list.className = 'poll-options';
+        list.id = 'pollOptionsList';
+
+        post.pollData.options.forEach((opt) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'poll-option-btn';
+          btn.dataset.optionId = opt.id;
+
+          const fill = document.createElement('div');
+          fill.className = 'poll-bar-fill';
+
+          const content = document.createElement('div');
+          content.className = 'poll-option-content';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = opt.text;
+
+          const metaSpan = document.createElement('span');
+          metaSpan.className = 'poll-meta';
+          metaSpan.textContent = '0%';
+
+          content.append(labelSpan, metaSpan);
+          btn.append(fill, content);
+
+          btn.addEventListener('click', () => castVote(post.id, opt.id));
+          list.appendChild(btn);
+        });
+
+        cardBody.appendChild(list);
+      }
+
+      if (post.linkUrl) {
+        const linkBox = document.createElement('div');
+        linkBox.className = 'post-link-box';
+
+        const a = document.createElement('a');
+        a.className = 'post-link';
+        a.href = post.linkUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+
+        const domain = (() => {
+          try { return new URL(post.linkUrl).hostname.replace(/^www\./, ''); }
+          catch { return post.linkUrl; }
+        })();
+
+        const txt = document.createElement('span');
+        txt.textContent = `${domain} ↗`;
+        a.appendChild(txt);
+        linkBox.appendChild(a);
+        cardBody.appendChild(linkBox);
+      }
+
+      updateMetricsUI(post);
+    }
+
+    function updateMetricsUI(post) {
+      likeCountEl.textContent = post.likes || 0;
+      dislikeCountEl.textContent = post.dislikes || 0;
+      updateReactionButtons();
+      if (post.type === 'poll' && post.pollData) {
+        updatePollBars(post.pollData);
+      }
+    }
+
+    function updateReactionButtons() {
+      likeBtn.classList.toggle('active-like', myReaction === 'like');
+      dislikeBtn.classList.toggle('active-dislike', myReaction === 'dislike');
+    }
+
+    function updatePollBars(pollData) {
+      const list = document.getElementById('pollOptionsList');
+      if (!list || !pollData) return;
+      const totalVotes = pollData.totalVotes || 0;
+      const buttons = list.querySelectorAll('.poll-option-btn');
+
+      buttons.forEach((btn) => {
+        const optId = parseInt(btn.dataset.optionId, 10);
+        const opt = pollData.options.find((o) => o.id === optId);
+        if (!opt) return;
+        const pct = totalVotes === 0 ? 0 : Math.round((opt.votes / totalVotes) * 100);
+        btn.querySelector('.poll-bar-fill').style.width = `${pct}%`;
+        btn.querySelector('.poll-meta').textContent = `${pct}% (${opt.votes})`;
+        btn.disabled = myPollVote !== null;
+        btn.classList.toggle('voted-mine', myPollVote === optId);
+      });
+    }
+
+    async function castVote(itemId, optionId) {
+      if (myPollVote !== null) return;
+      myPollVote = optionId;
+      saveLocalVote(itemId, optionId);
+      if (currentPost && currentPost.pollData) {
+        updatePollBars(currentPost.pollData);
+      }
+
+      try {
+        const res = await fetch('/api/vote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itemId, optionId, deviceId })
+        });
+        const data = await res.json();
+        if (!data.ok) showToast(data.error || 'Could not cast vote.');
+      } catch {
+        showToast('Network error casting vote.');
+      }
+    }
+
+    function startTimerLoop() {
+      cancelAnimationFrame(rafId);
+
+      function tick() {
+        if (!currentPost) return;
+        const now = Date.now() + clockOffsetMs;
+        const total = currentPost.endsAt - currentPost.startsAt;
+        const remaining = Math.max(0, currentPost.endsAt - now);
+        const pct = total > 0 ? Math.min(100, Math.max(0, (remaining / total) * 100)) : 0;
+
+        progressFill.style.width = `${pct}%`;
+        const secs = Math.ceil(remaining / 1000);
+        timerDisplay.textContent = `00:${String(secs).padStart(2, '0')}`;
+
+        if (remaining > 0) {
+          rafId = requestAnimationFrame(tick);
+        }
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // Reactions
+    likeBtn.addEventListener('click', () => {
+      if (!currentPost) return;
+      socket.emit('spotlight:react', { postId: currentPost.id, type: 'like' });
+    });
+
+    dislikeBtn.addEventListener('click', () => {
+      if (!currentPost) return;
+      socket.emit('spotlight:react', { postId: currentPost.id, type: 'dislike' });
+    });
+
+    // --- Notifications ---
+
+    function renderNotifs() {
+      if (!mySubmissions.length) {
+        notifList.innerHTML = '<div class="notif-empty">No recent submissions yet.</div>';
+        return;
+      }
+
+      if (currentState) {
+        mySubmissions.forEach((sub) => {
+          if (sub.status === 'pending') {
+            const isLive = currentState.active && currentState.active.id === sub.id;
+            const isQueued = Array.isArray(currentState.queue) && currentState.queue.some((q) => q.id === sub.id);
+            const isArchived = Array.isArray(currentState.archive) && currentState.archive.some((a) => a.id === sub.id);
+            if (isLive || isQueued || isArchived) sub.status = 'approved';
+          }
+        });
+      }
+
+      notifList.innerHTML = '';
+      mySubmissions.forEach((sub) => {
+        const item = document.createElement('div');
+        item.className = 'notif-item';
+
+        const title = document.createElement('div');
+        title.className = 'notif-title';
+
+        const statusRow = document.createElement('div');
+        statusRow.className = 'notif-status';
+
+        let isCompleted = false;
+        const label = sub.type === 'media' ? 'IMAGE' : sub.type.toUpperCase();
+
+        if (sub.status === 'pending') {
+          const s = document.createElement('span');
+          s.className = 'status-pending';
+          s.textContent = '● Pending Review';
+          statusRow.appendChild(s);
+        } else if (sub.status === 'rejected') {
+          const s = document.createElement('span');
+          s.className = 'status-rejected';
+          s.textContent = '● Rejected (Rule Violation)';
+          statusRow.appendChild(s);
+        } else if (sub.status === 'approved') {
+          const s = document.createElement('span');
+          s.className = 'status-approved';
+          s.textContent = '● Approved';
+          statusRow.appendChild(s);
+
+          const meta = document.createElement('span');
+          meta.className = 'notif-meta';
+
+          if (currentState && currentState.active && currentState.active.id === sub.id) {
+            meta.textContent = '· LIVE NOW';
+          } else if (currentState && Array.isArray(currentState.queue)) {
+            const qIndex = currentState.queue.findIndex((q) => q.id === sub.id);
+            if (qIndex !== -1) {
+              const slotSec = currentState.slotSeconds || 30;
+              const activeLeftSec = currentPost
+                ? Math.max(0, (currentPost.endsAt - (Date.now() + clockOffsetMs)) / 1000)
+                : 0;
+              const totalSec = activeLeftSec + qIndex * slotSec;
+              meta.textContent = totalSec < 60
+                ? `· Est. ${Math.ceil(totalSec)}s wait`
+                : `· Est. ${Math.ceil(totalSec / 60)}m wait`;
+            } else {
+              meta.textContent = '· Completed';
+              isCompleted = true;
+            }
+          }
+          statusRow.appendChild(meta);
+        }
+
+        const isPoll = sub.type === 'poll';
+        title.textContent = `Spotlight ${label}${isPoll && isCompleted ? ' · View results →' : ''}`;
+
+        if (isPoll && isCompleted) {
+          item.classList.add('clickable');
+          item.addEventListener('click', () => {
+            notifPanel.classList.remove('show');
+            showPollResult(sub.id, sub.text || 'Your Poll');
+          });
+        }
+
+        item.append(title, statusRow);
+        notifList.appendChild(item);
+      });
+
+      localStorage.setItem('spotlight_subs', JSON.stringify(mySubmissions));
+    }
+
+    renderNotifs();
+
+    notifBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notifPanel.classList.toggle('show');
+      notifBadge.classList.remove('show');
+      renderNotifs();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!notifWrap.contains(e.target)) notifPanel.classList.remove('show');
+    });
+
+    async function showPollResult(id, title) {
+      try {
+        const res = await fetch(`/api/poll/${encodeURIComponent(id)}`);
+        const pollData = await res.json();
+        if (!res.ok) throw new Error(pollData.error || 'Not found');
+
+        modalTitle.textContent = 'Poll Results';
+        modalSub.textContent = 'Final vote breakdown for your 30-second spotlight.';
+
+        postForm.style.display = 'none';
+        payView.classList.remove('show');
+        pollResultView.innerHTML = '';
+
+        const q = document.createElement('div');
+        q.className = 'poll-question';
+        q.style.marginBottom = '14px';
+        q.textContent = title;
+        pollResultView.appendChild(q);
+
+        const list = document.createElement('div');
+        list.className = 'poll-options';
+
+        pollData.options.forEach((opt) => {
+          const pct = pollData.totalVotes === 0 ? 0 : Math.round((opt.votes / pollData.totalVotes) * 100);
+          const row = document.createElement('div');
+          row.className = 'poll-option-btn';
+          row.style.cursor = 'default';
+
+          const fill = document.createElement('div');
+          fill.className = 'poll-bar-fill';
+          fill.style.width = `${pct}%`;
+
+          const content = document.createElement('div');
+          content.className = 'poll-option-content';
+
+          const labelSpan = document.createElement('span');
+          labelSpan.textContent = opt.text;
+
+          const metaSpan = document.createElement('span');
+          metaSpan.className = 'poll-meta';
+          metaSpan.textContent = `${pct}% (${opt.votes})`;
+
+          content.append(labelSpan, metaSpan);
+          row.append(fill, content);
+          list.appendChild(row);
+        });
+
+        const totalNote = document.createElement('p');
+        totalNote.style.fontSize = '0.8rem';
+        totalNote.style.color = 'var(--text-muted)';
+        totalNote.style.marginTop = '12px';
+        totalNote.textContent = `Total votes: ${pollData.totalVotes}`;
+
+        pollResultView.append(list, totalNote);
+        pollResultView.style.display = 'block';
+        modalBackdrop.classList.add('open');
+      } catch {
+        showToast('Poll data expired or not found.');
+      }
+    }
+
+    // --- Modal & Form Logic ---
+
+    function syncTabPanels() {
+      document.querySelectorAll('.tab-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.tab === selectedTab);
+      });
+      document.querySelectorAll('.tab-panel').forEach((p) => {
+        p.style.display = 'none';
+      });
+      document.getElementById(`panel-${selectedTab}`).style.display = 'block';
+
+      if (selectedTab === 'image') {
+        imageUploadGroup.style.display = 'flex';
+        imageUploadGroup.style.order = '3';
+        imageUploadLabel.textContent = 'Upload image (JPG, PNG, GIF, WebP · max 8MB)';
+      } else if (selectedTab === 'poll') {
+        imageUploadGroup.style.display = 'flex';
+        imageUploadGroup.style.order = '4';
+        imageUploadLabel.textContent = 'Attach image to poll (optional · max 8MB)';
+      } else {
+        imageUploadGroup.style.display = 'none';
+      }
+    }
+
+    function openModal() {
+      formError.style.display = 'none';
+      const savedName = localStorage.getItem('spotlight_username') || '';
+      if (savedName && !usernameInput.value) {
+        usernameInput.value = savedName;
+      }
+      syncTabPanels();
+      updateQueueHint();
+      modalBackdrop.classList.add('open');
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove('open');
+      if (paymentPollInterval) {
+        clearInterval(paymentPollInterval);
+        paymentPollInterval = null;
+      }
+      setTimeout(() => {
+        modalTitle.textContent = 'Claim 30 Seconds ($1)';
+        modalSub.textContent = 'Shown live to everyone on the site. $1 in SOL.';
+        postForm.style.display = 'flex';
+        payView.classList.remove('show');
+        pollResultView.style.display = 'none';
+        submitPostBtn.disabled = false;
+        submitPostBtn.textContent = 'Continue to Payment · $1';
+      }, 200);
+    }
+
+    openModalBtn.addEventListener('click', openModal);
+    document.getElementById('idleCtaBtn').addEventListener('click', openModal);
+    closeModalBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    // Rules Modal
+    rulesBtn.addEventListener('click', () => rulesModal.classList.add('open'));
+    closeRulesModalBtn.addEventListener('click', () => rulesModal.classList.remove('open'));
+    acceptRulesBtn.addEventListener('click', () => rulesModal.classList.remove('open'));
+    rulesModal.addEventListener('click', (e) => {
+      if (e.target === rulesModal) rulesModal.classList.remove('open');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (modalBackdrop.classList.contains('open')) closeModal();
+        if (rulesModal.classList.contains('open')) rulesModal.classList.remove('open');
+      }
+    });
+
+    document.getElementById('backToEditBtn').addEventListener('click', () => {
+      if (paymentPollInterval) {
+        clearInterval(paymentPollInterval);
+        paymentPollInterval = null;
+      }
+      payView.classList.remove('show');
+      postForm.style.display = 'flex';
+      modalTitle.textContent = 'Claim 30 Seconds ($1)';
+      modalSub.textContent = 'Shown live to everyone on the site. $1 in SOL.';
+      submitPostBtn.disabled = false;
+      submitPostBtn.textContent = 'Continue to Payment · $1';
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedTab = btn.dataset.tab;
+        syncTabPanels();
+        formError.style.display = 'none';
+      });
+    });
+
+    // Character counters
+    textInput.addEventListener('input', () => {
+      textCounter.textContent = `${textInput.value.length} / 180`;
+    });
+    captionInput.addEventListener('input', () => {
+      captionCounter.textContent = `${captionInput.value.length} / 180`;
+    });
+    pollQuestionInput.addEventListener('input', () => {
+      pollQuestionCounter.textContent = `${pollQuestionInput.value.length} / 120`;
+    });
+
+    // Poll dynamic options
+    addOptionBtn.addEventListener('click', () => {
+      const count = pollInputs.querySelectorAll('.poll-opt-input').length;
+      if (count >= 4) return;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'poll-opt-input';
+      input.maxLength = 35;
+      input.placeholder = `Option ${count + 1} (Optional)`;
+      pollInputs.appendChild(input);
+      if (count + 1 >= 4) addOptionBtn.style.display = 'none';
+    });
+
+    // Image pre-upload (JPG, PNG, GIF, WebP · max 8MB)
+    const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
+    const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
+
+    function resetImageUploadUI() {
+      imageFileInput.value = '';
+      preMediaUrl = '';
+      preMediaPath = '';
+      isUploadingMedia = false;
+      imagePreviewBox.classList.remove('show');
+      imagePreview.src = '';
+      dropzone.style.display = 'block';
+      uploadProgressWrap.classList.remove('show');
+      uploadProgressBar.classList.remove('done');
+      uploadProgressBar.style.width = '0%';
+    }
+
+    function compressImage(file) {
+      // Keep GIFs untouched so animations still work
+      if (file.type === 'image/gif') return Promise.resolve(file);
+
+      return new Promise((resolve) => {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const maxDim = 1280;
+          let { width, height } = img;
+
+          if (width > maxDim || height > maxDim) {
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (!blob || blob.size >= file.size) {
+              resolve(file);
+              return;
+            }
+            const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
+            resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+          }, 'image/webp', 0.82);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(file);
+        };
+
+        img.src = objectUrl;
+      });
+    }
+
+    async function handleImageFile(file) {
+      if (!file) return;
+      if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+        resetImageUploadUI();
+        showFormError('Only JPG, PNG, GIF, and WebP images are supported.');
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        resetImageUploadUI();
+        showFormError('Image is too large. Maximum size is 8MB.');
+        return;
+      }
+
+      formError.style.display = 'none';
+      dropzone.style.display = 'none';
+      imagePreviewBox.classList.add('show');
+      imagePreviewName.textContent = file.name;
+      imagePreviewStatus.textContent = 'Optimizing image...';
+      imagePreviewStatus.style.color = 'var(--text-muted)';
+
+      isUploadingMedia = true;
+      submitPostBtn.disabled = true;
+      submitPostBtn.textContent = 'Optimizing image...';
+
+      const uploadFile = await compressImage(file);
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        imagePreview.src = ev.target.result;
+      };
+      reader.readAsDataURL(uploadFile);
+
+      imagePreviewName.textContent = uploadFile.name;
+      imagePreviewStatus.textContent = `${(uploadFile.size / 1024).toFixed(0)} KB · Uploading...`;
+
+      uploadProgressWrap.classList.add('show');
+      uploadProgressBar.classList.remove('done');
+      uploadProgressBar.style.width = '0%';
+      uploadPct.textContent = '0%';
+      uploadStatusText.textContent = 'Uploading image...';
+      submitPostBtn.textContent = 'Uploading image...';
+
+      const fd = new FormData();
+      fd.append('media', uploadFile);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/upload-media', true);
+
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+          const percent = Math.round((ev.loaded / ev.total) * 100);
+          uploadProgressBar.style.width = `${percent}%`;
+          uploadPct.textContent = `${percent}%`;
+        }
+      };
+
+      xhr.onload = () => {
+        isUploadingMedia = false;
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status === 200 && data.ok) {
+            uploadProgressBar.style.width = '100%';
+            uploadProgressBar.classList.add('done');
+            uploadPct.textContent = '100%';
+            uploadStatusText.textContent = 'Image ready!';
+            imagePreviewStatus.textContent = `${(uploadFile.size / 1024).toFixed(0)} KB · Uploaded`;
+            imagePreviewStatus.style.color = 'var(--like)';
+            preMediaUrl = data.mediaUrl;
+            preMediaPath = data.mediaPath;
+          } else {
+            throw new Error(data.error || 'Upload failed');
+          }
+        } catch (err) {
+          showFormError(err.message || 'Failed to upload image.');
+          resetImageUploadUI();
+        } finally {
+          submitPostBtn.disabled = false;
+          submitPostBtn.textContent = 'Continue to Payment · $1';
+        }
+      };
+
+      xhr.onerror = () => {
+        isUploadingMedia = false;
+        showFormError('Network error while uploading image.');
+        resetImageUploadUI();
+        submitPostBtn.disabled = false;
+        submitPostBtn.textContent = 'Continue to Payment · $1';
+      };
+
+      xhr.send(fd);
+    }
+
+    dropzone.addEventListener('click', () => imageFileInput.click());
+    imageFileInput.addEventListener('change', (e) => handleImageFile(e.target.files[0]));
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleImageFile(e.dataTransfer.files[0]);
+    });
+
+    removeImgBtn.addEventListener('click', () => {
+      resetImageUploadUI();
+      submitPostBtn.disabled = false;
+      submitPostBtn.textContent = 'Continue to Payment · $1';
+    });
+
+    function showFormError(msg) {
+      formError.textContent = msg;
+      formError.style.display = 'block';
+    }
+
+    function resetForm() {
+      postForm.reset();
+      textCounter.textContent = '0 / 180';
+      captionCounter.textContent = '0 / 180';
+      pollQuestionCounter.textContent = '0 / 120';
+      resetImageUploadUI();
+
+      pollInputs.innerHTML = `
+        <input type="text" class="poll-opt-input" maxlength="35" placeholder="Option 1 (e.g. Yes)" />
+        <input type="text" class="poll-opt-input" maxlength="35" placeholder="Option 2 (e.g. No)" />
+      `;
+      addOptionBtn.style.display = 'inline-block';
+      selectedTab = 'text';
+      syncTabPanels();
+    }
+
+    // Copy Icon Helper
+    const copyIconSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const checkIconSVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+    function setupCopyButton(btnId, textToCopy, label) {
+      const btn = document.getElementById(btnId);
+      btn.innerHTML = copyIconSVG;
+      btn.classList.remove('copied');
+      btn.onclick = () => {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          btn.innerHTML = checkIconSVG;
+          btn.classList.add('copied');
+          showToast(`Copied ${label}!`);
+          setTimeout(() => {
+            btn.innerHTML = copyIconSVG;
+            btn.classList.remove('copied');
+          }, 2000);
+        }).catch(() => showToast('Copy failed.'));
+      };
+    }
+
+    // Submit & Solana Payment Flow
+    postForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      formError.style.display = 'none';
+
+      if (isUploadingMedia) {
+        return showFormError('Please wait for your image to finish uploading.');
+      }
+
+      const username = usernameInput.value.trim();
+      if (username.length < 2 || username.length > 20) {
+        usernameInput.focus();
+        return showFormError('Name must be 2 to 20 characters.');
+      }
+      if (!/^[a-zA-Z0-9_.\s-]+$/.test(username)) {
+        usernameInput.focus();
+        return showFormError('Name can only use letters, numbers, spaces, _ . -');
+      }
+
+      const backendType = selectedTab === 'image' ? 'media' : selectedTab;
+      const payload = {
+        deviceId,
+        username,
+        type: backendType,
+        linkUrl: linkInput.value.trim()
+      };
+
+      if (backendType === 'text') {
+        const txt = textInput.value.trim();
+        if (txt.length < 3) {
+          textInput.focus();
+          return showFormError('Message must be at least 3 characters.');
+        }
+        payload.text = txt;
+      } else if (backendType === 'media') {
+        if (!preMediaUrl) {
+          return showFormError('Please upload an image first.');
+        }
+        payload.preMediaUrl = preMediaUrl;
+        payload.preMediaPath = preMediaPath;
+        payload.text = captionInput.value.trim();
+      } else if (backendType === 'poll') {
+        const q = pollQuestionInput.value.trim();
+        if (q.length < 5 || q.length > 120) {
+          pollQuestionInput.focus();
+          return showFormError('Poll question must be 5 to 120 characters.');
+        }
+        const opts = Array.from(pollInputs.querySelectorAll('.poll-opt-input')).map((i) => i.value.trim());
+        if (!opts[0] || !opts[1]) {
+          return showFormError('Polls require at least 2 options.');
+        }
+        payload.text = q;
+        payload.pollOpt1 = opts[0] || '';
+        payload.pollOpt2 = opts[1] || '';
+        payload.pollOpt3 = opts[2] || '';
+        payload.pollOpt4 = opts[3] || '';
+        if (preMediaUrl) {
+          payload.preMediaUrl = preMediaUrl;
+          payload.preMediaPath = preMediaPath;
+        }
+      }
+
+      if (payload.linkUrl && !/^https?:\/\/.{3,}/i.test(payload.linkUrl)) {
+        linkInput.focus();
+        return showFormError('Link must start with http:// or https://');
+      }
+
+      localStorage.setItem('spotlight_username', username);
+      submitPostBtn.disabled = true;
+      submitPostBtn.textContent = 'Preparing payment...';
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          showFormError(result.error || 'Unable to submit.');
+          submitPostBtn.disabled = false;
+          submitPostBtn.textContent = 'Continue to Payment · $1';
+          return;
+        }
+
+        // Switch modal to Solana Payment View
+        modalTitle.textContent = 'Complete Payment';
+        modalSub.textContent = 'Scan QR or tap Open Wallet App to pay $1 in SOL.';
+        postForm.style.display = 'none';
+        payView.classList.add('show');
+
+        document.getElementById('payAmount').textContent = result.solAmount;
+        document.getElementById('liveRate').textContent = result.solPrice;
+        document.getElementById('payAddress').textContent = result.depositAddress;
+        document.getElementById('openWalletBtn').href = result.qrUrl;
+        document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.qrUrl)}`;
+
+        setupCopyButton('copyPriceBtn', result.solAmount, 'SOL amount');
+        setupCopyButton('copyAddrBtn', result.depositAddress, 'deposit address');
+
+        if (paymentPollInterval) clearInterval(paymentPollInterval);
+        paymentPollInterval = setInterval(async () => {
+          try {
+            const checkRes = await fetch(`/api/check-payment/${encodeURIComponent(result.depositAddress)}`);
+            const checkData = await checkRes.json();
+            if (checkData.paid) {
+              clearInterval(paymentPollInterval);
+              paymentPollInterval = null;
+
+              mySubmissions.unshift({
+                id: result.itemId,
+                type: backendType,
+                status: checkData.autoApproved ? 'approved' : 'pending',
+                text: payload.text
+              });
+              mySubmissions = mySubmissions.slice(0, 10);
+              renderNotifs();
+              notifBadge.classList.add('show');
+
+              showToast(
+                checkData.autoApproved
+                  ? 'Payment received! Your spotlight is queued.'
+                  : 'Payment received! Sent to moderation.'
+              );
+              resetForm();
+              closeModal();
+            }
+          } catch {}
+        }, 3000);
+      } catch {
+        showFormError('Network error. Please try again.');
+        submitPostBtn.disabled = false;
+        submitPostBtn.textContent = 'Continue to Payment · $1';
+      }
+    });
+
+    // Initial state hydrate
+    fetch('/api/state')
+      .then((r) => r.json())
+      .then(applyState)
+      .catch(() => showToast('Could not connect to the server.'));
+  </script>
+</body>
+</html>
