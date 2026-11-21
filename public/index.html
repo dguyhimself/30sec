@@ -511,10 +511,60 @@
       border-radius: 12px;
       object-fit: contain;
       background: var(--surface-subtle);
+      cursor: zoom-in;
     }
 
     .post-image-wrap.poll-media img {
       max-height: 30vh;
+    }
+
+    /* Fullscreen Image Lightbox */
+    .lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.86);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 90;
+      cursor: zoom-out;
+    }
+
+    .lightbox-backdrop.open {
+      display: flex;
+    }
+
+    .lightbox-img {
+      max-width: 94vw;
+      max-height: 88dvh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+      cursor: default;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(18, 18, 21, 0.75);
+      color: #ffffff;
+      font-size: 1.4rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255, 255, 255, 0.18);
     }
 
     .post-caption {
@@ -1575,6 +1625,12 @@
     </div>
   </div>
 
+  <!-- Fullscreen Image Lightbox -->
+  <div class="lightbox-backdrop" id="lightboxBackdrop" role="dialog" aria-modal="true" aria-label="Image preview">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close image">&times;</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="Expanded spotlight image" />
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="/socket.io/socket.io.js"></script>
@@ -1710,6 +1766,28 @@
     const closeRulesModalBtn = document.getElementById('closeRulesModalBtn');
     const acceptRulesBtn = document.getElementById('acceptRulesBtn');
 
+    const lightboxBackdrop = document.getElementById('lightboxBackdrop');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxClose = document.getElementById('lightboxClose');
+
+    function openLightbox(src, alt) {
+      if (!src) return;
+      lightboxImg.src = src;
+      lightboxImg.alt = alt || 'Spotlight image';
+      lightboxBackdrop.classList.add('open');
+    }
+
+    function closeLightbox() {
+      if (!lightboxBackdrop.classList.contains('open')) return;
+      lightboxBackdrop.classList.remove('open');
+      lightboxImg.src = '';
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxBackdrop.addEventListener('click', (e) => {
+      if (e.target === lightboxBackdrop) closeLightbox();
+    });
+
     const toastEl = document.getElementById('toast');
     let toastTimer = null;
 
@@ -1842,6 +1920,7 @@
     // --- Rendering (XSS-safe DOM nodes) ---
 
     function renderIdle() {
+      closeLightbox();
       cancelAnimationFrame(rafId);
       progressFill.style.width = '0%';
       activeHeader.style.display = 'none';
@@ -1893,6 +1972,11 @@
       img.addEventListener('error', () => {
         status.textContent = 'Image failed to load';
       });
+      img.addEventListener('click', () => {
+        if (img.complete && img.naturalWidth > 0) {
+          openLightbox(img.src, img.alt);
+        }
+      });
       img.src = src;
 
       if (img.complete && img.naturalWidth > 0) {
@@ -1906,6 +1990,7 @@
     }
 
     function renderActivePost(post) {
+      closeLightbox();
       activeHeader.style.display = 'flex';
       activeFooter.style.display = 'flex';
       creatorLabel.textContent = post.username ? `by @${post.username}` : '';
@@ -2319,6 +2404,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        if (lightboxBackdrop.classList.contains('open')) closeLightbox();
         if (modalBackdrop.classList.contains('open')) closeModal();
         if (rulesModal.classList.contains('open')) rulesModal.classList.remove('open');
       }
