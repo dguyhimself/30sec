@@ -30,6 +30,8 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 }
 
 const memoryWallets = new Map();
+const walletLocks = new Map();
+const activeSweeps = new Map();
 const memorySavedPolls = new Map();
 
 const app = express();
@@ -40,9 +42,38 @@ const PORT = process.env.PORT || 3000;
 const SLOT_SECONDS = 30;
 const SLOT_PRICE_CENTS = 100;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8MB max
+const DATA_DIR = path.join(__dirname, "data");
+const WALLETS_FILE = path.join(DATA_DIR, "wallets.json");
 const UPLOAD_DIR = path.join(__dirname, "public", "uploads");
 
+fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+// Load saved local wallets into memory on startup
+try {
+  if (fs.existsSync(WALLETS_FILE)) {
+    const raw = JSON.parse(fs.readFileSync(WALLETS_FILE, "utf8"));
+    for (const [devId, secretArr] of Object.entries(raw)) {
+      if (Array.isArray(secretArr) && secretArr.length === 64) {
+        memoryWallets.set(devId, Keypair.fromSecretKey(Uint8Array.from(secretArr)));
+      }
+    }
+  }
+} catch (e) {
+  console.error("[WALLET DISK LOAD ERROR]", e.message);
+}
+
+function saveWalletsToDisk() {
+  try {
+    const obj = {};
+    for (const [devId, kp] of memoryWallets.entries()) {
+      obj[devId] = Array.from(kp.secretKey);
+    }
+    fs.writeFileSync(WALLETS_FILE, JSON.stringify(obj));
+  } catch (e) {
+    console.error("[WALLET DISK SAVE ERROR]", e.message);
+  }
+}
 
 app.set("trust proxy", 1);
 
@@ -86,62 +117,88 @@ async function getLiveSolPrice() {
   return 175.0; // Fallback price
 }
 
-async function sweepToMaster(fromKeypair, currentBalance) {
-  try {
-    const balanceBigInt = BigInt(currentBalance);
-    const feeBigInt = BigInt(5000);
-    const sweepAmount = balanceBigInt - feeBigInt;
-    if (sweepAmount <= 0n) return;
+function sweepToMaster(fromKeypair, currentBalance) {
+  const addr = fromKeypair.publicKey.toBase58();
+  const sweepPromise = (async () => {
+    try {
+      const balanceBigInt = BigInt(currentBalance);
+      const feeBigInt = BigInt(5000);
+      const sweepAmount = balanceBigInt - feeBigInt;
+      if (sweepAmount <= 0n) return;
 
-    const tx = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: fromKeypair.publicKey,
-        toPubkey: MASTER_WALLET,
-        lamports: sweepAmount,
-      })
-    );
-    await sendAndConfirmTransaction(connection, tx, [fromKeypair]);
-    console.log(`🧹 Swept ${(Number(sweepAmount) / LAMPORTS_PER_SOL).toFixed(6)} SOL to Master Wallet!`);
-  } catch (err) {
-    console.error("[SWEEP ERROR]", err.message);
-  }
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: fromKeypair.publicKey,
+          toPubkey: MASTER_WALLET,
+          lamports: sweepAmount,
+        })
+      );
+      await sendAndConfirmTransaction(connection, tx, [fromKeypair]);
+      console.log(`🧹 Swept ${(Number(sweepAmount) / LAMPORTS_PER_SOL).toFixed(6)} SOL to Master Wallet!`);
+    } catch (err) {
+      console.error("[SWEEP ERROR]", err.message);
+    } finally {
+      activeSweeps.delete(addr);
+    }
+  })();
+
+  activeSweeps.set(addr, sweepPromise);
+  return sweepPromise;
 }
 
 // --- USER WALLET MANAGEMENT ---
 async function getOrCreateWallet(deviceId) {
   if (!deviceId) throw new Error("No device ID");
 
-  if (redis) {
-    try {
-      const storedKey = await redis.get(`wallet:${deviceId}`);
-      if (storedKey) {
-        const secretArray = typeof storedKey === "string" ? JSON.parse(storedKey) : storedKey;
-        if (Array.isArray(secretArray) && secretArray.length === 64) {
-          return Keypair.fromSecretKey(Uint8Array.from(secretArray));
-        }
-      }
-    } catch (e) {
-      console.error("[REDIS GET ERROR]", e.message);
-    }
-  } else if (memoryWallets.has(deviceId)) {
+  if (memoryWallets.has(deviceId)) {
     return memoryWallets.get(deviceId);
   }
 
-  console.log(`[WALLET] Creating NEW wallet for ${deviceId}`);
-  const newKeypair = Keypair.generate();
-
-  if (redis) {
-    try {
-      const secretArray = Array.from(newKeypair.secretKey);
-      await redis.set(`wallet:${deviceId}`, JSON.stringify(secretArray));
-    } catch (e) {
-      console.error("[REDIS SET ERROR]", e.message);
-    }
-  } else {
-    memoryWallets.set(deviceId, newKeypair);
+  if (walletLocks.has(deviceId)) {
+    return walletLocks.get(deviceId);
   }
 
-  return newKeypair;
+  const promise = (async () => {
+    try {
+      if (redis) {
+        try {
+          const storedKey = await redis.get(`wallet:${deviceId}`);
+          if (storedKey) {
+            const secretArray = typeof storedKey === "string" ? JSON.parse(storedKey) : storedKey;
+            if (Array.isArray(secretArray) && secretArray.length === 64) {
+              const kp = Keypair.fromSecretKey(Uint8Array.from(secretArray));
+              memoryWallets.set(deviceId, kp);
+              saveWalletsToDisk();
+              return kp;
+            }
+          }
+        } catch (e) {
+          console.error("[REDIS GET ERROR]", e.message);
+        }
+      }
+
+      console.log(`[WALLET] Creating NEW wallet for ${deviceId}`);
+      const newKeypair = Keypair.generate();
+      memoryWallets.set(deviceId, newKeypair);
+      saveWalletsToDisk();
+
+      if (redis) {
+        try {
+          const secretArray = Array.from(newKeypair.secretKey);
+          await redis.set(`wallet:${deviceId}`, JSON.stringify(secretArray));
+        } catch (e) {
+          console.error("[REDIS SET ERROR]", e.message);
+        }
+      }
+
+      return newKeypair;
+    } finally {
+      walletLocks.delete(deviceId);
+    }
+  })();
+
+  walletLocks.set(deviceId, promise);
+  return promise;
 }
 
 // --- TELEGRAM MODERATION SETUP ---
@@ -149,6 +206,13 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ADMIN_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const TELEGRAM_ENABLED = Boolean(TELEGRAM_TOKEN && ADMIN_CHAT_ID);
 const TG_API = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+
+function escapeTgHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 async function sendTelegramMessage(caption, inlineKeyboard) {
   if (!TELEGRAM_ENABLED) return;
@@ -159,7 +223,7 @@ async function sendTelegramMessage(caption, inlineKeyboard) {
       body: JSON.stringify({
         chat_id: ADMIN_CHAT_ID,
         text: caption,
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
         reply_markup: { inline_keyboard: inlineKeyboard },
       }),
     });
@@ -172,30 +236,35 @@ async function sendTelegramDocument(filePath, caption, inlineKeyboard, fallbackU
   if (!TELEGRAM_ENABLED) return;
   try {
     const fileSize = fs.statSync(filePath).size;
-    if (fileSize > 48 * 1024 * 1024) {
-      const sizeMB = (fileSize / (1024 * 1024)).toFixed(1);
-      const linkText = fallbackUrl
-        ? `\n\nLarge Image (${sizeMB}MB) - Review here:\n${fallbackUrl}`
-        : `\n\n(File is ${sizeMB}MB - too large for Telegram preview)`;
-      return sendTelegramMessage(caption + linkText, inlineKeyboard);
-    }
+    const ext = path.extname(filePath).toLowerCase();
+    const isGif = ext === ".gif";
+    const safeCaption = caption.slice(0, 1020);
+
+    // Telegram sendPhoto supports up to 10MB for JPG/PNG/WebP; use sendDocument for GIFs or >9.5MB
+    const usePhotoEndpoint = !isGif && fileSize < 9.5 * 1024 * 1024;
+    const endpoint = usePhotoEndpoint ? "sendPhoto" : "sendDocument";
+    const fieldName = usePhotoEndpoint ? "photo" : "document";
 
     const fileBuffer = fs.readFileSync(filePath);
     const form = new FormData();
     form.append("chat_id", ADMIN_CHAT_ID);
-    form.append("caption", caption);
-    form.append("parse_mode", "Markdown");
-    form.append("document", new Blob([fileBuffer]), path.basename(filePath));
+    form.append("caption", safeCaption);
+    form.append("parse_mode", "HTML");
+    form.append(fieldName, new Blob([fileBuffer]), path.basename(filePath));
     form.append("reply_markup", JSON.stringify({ inline_keyboard: inlineKeyboard }));
 
-    const tgRes = await fetch(`${TG_API}/sendDocument`, { method: "POST", body: form });
+    const tgRes = await fetch(`${TG_API}/${endpoint}`, { method: "POST", body: form });
     if (!tgRes.ok) {
-      const linkText = fallbackUrl ? `\n\nReview file here:\n${fallbackUrl}` : "";
-      await sendTelegramMessage(caption + linkText, inlineKeyboard);
+      const errText = await tgRes.text().catch(() => "");
+      console.error(`[TG ${endpoint} FAILED]`, errText);
+      const linkText = fallbackUrl ? `\n\nReview image: ${escapeTgHtml(fallbackUrl)}` : "";
+      await sendTelegramMessage(safeCaption + linkText, inlineKeyboard);
     }
   } catch (err) {
     console.error("[TG MEDIA ERROR]", err.message);
-    if (fallbackUrl) sendTelegramMessage(`${caption}\n\nReview file here:\n${fallbackUrl}`, inlineKeyboard);
+    if (fallbackUrl) {
+      sendTelegramMessage(`${caption}\n\nReview image: ${escapeTgHtml(fallbackUrl)}`, inlineKeyboard);
+    }
   }
 }
 
@@ -530,6 +599,10 @@ app.post("/api/submit", (req, res, next) => {
     const keypair = await getOrCreateWallet(deviceId);
     const depositAddress = keypair.publicKey.toBase58();
 
+    if (activeSweeps.has(depositAddress)) {
+      await activeSweeps.get(depositAddress);
+    }
+
     let currentBalance = 0;
     try {
       const rawBal = await connection.getBalance(keypair.publicKey);
@@ -596,11 +669,12 @@ app.get("/api/check-payment/:address", async (req, res) => {
 
         const pollStr =
           session.item.type === "poll"
-            ? `\nPoll Options:\n` + session.item.pollData.options.map((o) => `- ${o.text}`).join("\n")
+            ? `\n\n<b>Poll Options:</b>\n` +
+              session.item.pollData.options.map((o, idx) => `${idx + 1}. ${escapeTgHtml(o.text)}`).join("\n")
             : "";
-        const caption = `🔥 *New Paid Submission*\nUser: @${session.item.username}\nType: ${session.item.type}\nText: ${
+        const caption = `🔥 <b>New Paid Submission</b>\n<b>User:</b> @${escapeTgHtml(session.item.username)}\n<b>Type:</b> ${escapeTgHtml(session.item.type)}\n<b>Text:</b> ${escapeTgHtml(
           session.item.text || "N/A"
-        }\nLink: ${session.item.linkUrl || "N/A"}${pollStr}`;
+        )}\n<b>Link:</b> ${escapeTgHtml(session.item.linkUrl || "N/A")}${pollStr}`;
         const buttons = [
           [
             { text: "✅ Approve", callback_data: `approve_${session.item.id}` },
@@ -671,12 +745,12 @@ async function handleTelegramAction(query) {
     io.emit("state", stateSnapshot());
     io.emit("submission-status", { id: item.id, status: "approved" });
     if (!db.active) advanceSpotlight();
-    sendTelegramMessage(`✅ Approved @${item.username}`, []);
-  } else if (decision === "reject") {
+    sendTelegramMessage(`✅ Approved @${escapeTgHtml(item.username)}`, []);
+    } else if (decision === "reject") {
     if (item.mediaUrl) deleteMedia(item.mediaUrl);
     saveDb();
     io.emit("submission-status", { id: item.id, status: "rejected" });
-    sendTelegramMessage(`❌ Rejected @${item.username}`, []);
+    sendTelegramMessage(`❌ Rejected @${escapeTgHtml(item.username)}`, []);
   }
 }
 
