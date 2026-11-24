@@ -17,57 +17,65 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #fafafa;
+      --bg: #f7f5f0;
+      --bg-glow: rgba(108, 71, 255, 0.09);
+      --bg-glow-warm: rgba(245, 158, 11, 0.08);
       --surface: #ffffff;
-      --surface-subtle: #f4f4f5;
-      --border: #e4e4e7;
-      --border-strong: #d4d4d8;
-      --text: #09090b;
-      --text-muted: #71717a;
-      --accent: #09090b;
-      --accent-hover: #27272a;
+      --surface-subtle: #f1eee7;
+      --border: #e5e0d5;
+      --border-strong: #d2cabd;
+      --text: #181523;
+      --text-muted: #6c667a;
+      --accent: #6c47ff;
+      --accent-hover: #5835eb;
       --accent-text: #ffffff;
+      --accent-glow: rgba(108, 71, 255, 0.24);
+      --spotlight-gold: #f59e0b;
       --live: #10b981;
       --like: #16a34a;
-      --like-bg: #f0fdf4;
-      --dislike: #dc2626;
-      --dislike-bg: #fef2f2;
+      --like-bg: #ecfdf5;
+      --dislike: #e11d48;
+      --dislike-bg: #fff1f2;
       --warn: #d97706;
       --warn-bg: #fffbeb;
       --warn-border: #fde68a;
-      --poll-mine-fill: #e4e4e7;
-      --backdrop: rgba(9, 9, 11, 0.45);
-      --radius: 16px;
-      --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 12px 32px rgba(0, 0, 0, 0.04);
-      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.15);
+      --poll-mine-fill: rgba(108, 71, 255, 0.14);
+      --backdrop: rgba(24, 21, 35, 0.48);
+      --radius: 20px;
+      --shadow: 0 2px 6px rgba(24, 21, 35, 0.04), 0 16px 38px rgba(108, 71, 255, 0.06);
+      --shadow-lg: 0 24px 56px rgba(24, 21, 35, 0.18);
     }
 
     :root[data-theme="dark"] {
-      --bg: #09090b;
-      --surface: #121215;
-      --surface-subtle: #1c1c21;
-      --border: #27272a;
-      --border-strong: #3f3f46;
-      --text: #fafafa;
-      --text-muted: #a1a1aa;
-      --accent: #fafafa;
-      --accent-hover: #e4e4e7;
-      --accent-text: #09090b;
+      --bg: #0b0914;
+      --bg-glow: rgba(115, 82, 255, 0.18);
+      --bg-glow-warm: rgba(245, 158, 11, 0.09);
+      --surface: #131020;
+      --surface-subtle: #1c182e;
+      --border: #2a2442;
+      --border-strong: #3d355e;
+      --text: #f7f5fc;
+      --text-muted: #9e96b8;
+      --accent: #7352ff;
+      --accent-hover: #8568ff;
+      --accent-text: #ffffff;
+      --accent-glow: rgba(115, 82, 255, 0.32);
+      --spotlight-gold: #fbbf24;
       --live: #10b981;
       --like: #22c55e;
-      --like-bg: rgba(34, 197, 94, 0.12);
-      --dislike: #ef4444;
-      --dislike-bg: rgba(239, 68, 68, 0.12);
-      --warn: #f59e0b;
-      --warn-bg: rgba(245, 158, 11, 0.12);
-      --warn-border: rgba(245, 158, 11, 0.35);
-      --poll-mine-fill: #2e2e36;
-      --backdrop: rgba(0, 0, 0, 0.72);
-      --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
-      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.65);
+      --like-bg: rgba(34, 197, 94, 0.13);
+      --dislike: #fb7185;
+      --dislike-bg: rgba(251, 113, 133, 0.13);
+      --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, 0.12);
+      --warn-border: rgba(251, 191, 36, 0.35);
+      --poll-mine-fill: rgba(115, 82, 255, 0.24);
+      --backdrop: rgba(6, 5, 12, 0.76);
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 18px 42px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.7);
     }
 
     * {
@@ -77,8 +85,12 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 75% 45% at 50% -10%, var(--bg-glow), transparent 70%),
+        radial-gradient(ellipse 45% 30% at 85% 15%, var(--bg-glow-warm), transparent 70%);
+      background-attachment: fixed;
       color: var(--text);
       min-height: 100vh;
       display: flex;
@@ -104,9 +116,10 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 700;
-      font-size: 1.05rem;
-      letter-spacing: -0.02em;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-weight: 800;
+      font-size: 1.18rem;
+      letter-spacing: -0.03em;
     }
 
     .pulse-dot {
@@ -339,7 +352,8 @@
       font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.12s ease, background-color 0.15s ease;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -376,7 +390,7 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: none;
       overflow: hidden;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
@@ -392,7 +406,7 @@
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: var(--text);
+      background: linear-gradient(90deg, var(--accent), var(--spotlight-gold));
       transform-origin: left;
       will-change: width;
     }
@@ -475,9 +489,10 @@
     }
 
     .empty-state h1 {
-      font-size: 1.35rem;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.5rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
     }
 
     .empty-state p {
@@ -489,10 +504,11 @@
 
     /* Post Types */
     .post-text-main {
-      font-size: clamp(1.25rem, 2.6vw, 1.65rem);
-      font-weight: 600;
-      line-height: 1.4;
-      letter-spacing: -0.02em;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: clamp(1.3rem, 2.8vw, 1.75rem);
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: -0.025em;
       text-align: center;
       word-break: break-word;
       white-space: pre-wrap;
@@ -577,9 +593,10 @@
 
     /* Poll UI */
     .poll-question {
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: -0.015em;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
       word-break: break-word;
     }
 
@@ -595,7 +612,7 @@
       text-align: left;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 13px 16px;
       font-family: inherit;
       font-size: 0.95rem;
@@ -603,15 +620,15 @@
       color: var(--text);
       cursor: pointer;
       overflow: hidden;
-      transition: border-color 0.15s ease;
+      transition: border-color 0.15s ease, transform 0.12s ease;
     }
 
     .poll-option-btn:hover:not(:disabled) {
-      border-color: var(--text);
+      border-color: var(--accent);
     }
 
     .poll-option-btn.voted-mine {
-      border-color: var(--text);
+      border-color: var(--accent);
       font-weight: 600;
     }
 
@@ -783,7 +800,8 @@
     }
 
     .modal-header h2 {
-      font-size: 1.1rem;
+      font-family: 'Bricolage Grotesque', sans-serif;
+      font-size: 1.18rem;
       font-weight: 700;
       letter-spacing: -0.02em;
     }
@@ -1618,6 +1636,10 @@
         <div class="rule-item">
           <h4>Zero Refunds Policy</h4>
           <p>All SOL payments are final. Submissions rejected for breaking content rules will not be refunded.</p>
+        </div>
+        <div class="rule-item">
+          <h4>Why Solana (SOL)?</h4>
+          <p>We chose SOL because transactions settle in seconds with negligible fees—making it practically the only currency where you can send $1 without losing half of it to network or card processing fees.</p>
         </div>
       </div>
 
@@ -2496,6 +2518,8 @@
           canvas.width = width;
           canvas.height = height;
           const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
           canvas.toBlob((blob) => {
@@ -2504,8 +2528,8 @@
               return;
             }
             const baseName = file.name.replace(/\.[^.]+$/, '') || 'image';
-            resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
-          }, 'image/webp', 0.82);
+            resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.85);
         };
 
         img.onerror = () => {
